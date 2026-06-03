@@ -24,7 +24,7 @@
 The AGI Lab Framework is a **from-scratch autonomous AI-research laboratory stack** sized to run on a single 18 GB MacBook M3 Pro. It has three tightly-integrated halves, all present in this repo:
 
 1. **A native neural-network training engine** (C17 + Apple Metal GPU kernels + a Swift Metal bridge) — hand-written tensors, memory arenas, a Mixture-of-Experts transformer (**HSPA**), **three** gradient methods (backpropagation, iterative predictive coding, direct feedback alignment), quantization-aware training (4-bit), and a byte-level BPE tokenizer. No PyTorch / TensorFlow / JAX anywhere. → `src/`
-2. **A ~30-role autonomous research organization** — LLM "agents" in specialized roles (PI, Director, theorists, C/kernel engineers, reviewers, curators…) that propose, **pre-register**, execute, verify, and write up research under a formal governance protocol: phase gates (P0–P15), unanimous-compromise decisions, anti-forgery co-signing, and a calibration self-correction loop. → `data/agents/`, `run_agi_lab.sh`, `tools/`
+2. **A ~31-role autonomous research organization** — LLM "agents" in specialized roles (PI, Director, theorists, C/kernel engineers, reviewers, curators…) that propose, **pre-register**, execute, verify, and write up research under a formal governance protocol: phase gates (P0–P15), unanimous-compromise decisions, anti-forgery co-signing, and a calibration self-correction loop. → `data/agents/`, `run_agi_lab.sh`, `tools/`
 3. **A 4-layer hybrid retrieval (RAG) memory** — knowledge graph (Personalized PageRank) + dense embeddings + BM25, fused via reciprocal-rank fusion and re-ranked with a cross-encoder, over a lab's own markdown corpus — served by a persistent warm-model daemon with graceful fallback. → `tools/retrieval/`, `tools/lab_memory.py`
 
 **Two missions, stated honestly** (this framing is baked into the framework's governance and is worth preserving when you fork it):
@@ -47,7 +47,7 @@ The engineering achievement the framework embodies is the **integrated system**:
 | Native engine | **~19,600 LOC** — C 15,573 · headers 2,740 · Metal 1,047 · Swift 233 |
 | Python (tracked, non-test) | 18,991 LOC |
 | Tests | **828 Python test functions + 269 C (Unity) cases** |
-| Autonomous agent roles | **30** (plus 18 retired, kept as templates/precedent) |
+| Autonomous agent roles | **31** (plus 18 retired, kept as templates/precedent) |
 | Tools | **64** Python tools |
 | Git history | **283 commits over ~7.1 weeks** (2026-04-13 → 2026-06-02) |
 
@@ -128,13 +128,13 @@ A custom single-header **Unity-style C test framework** (`src/tests/unity.h`, `T
 
 ## 2. The Autonomous Agent Organization & Governance
 
-The framework is not a single LLM loop — it is a self-governing research organization staffed by ~30 specialized LLM "agent" roles, coordinated by a `bash` runner that spawns one Director session at a time. Authority is split between two leads (PI + Director) under a unanimous-compromise protocol, work is gated through a 16-phase research pipeline (P0–P15), and every consequential act is recorded as a numbered decision (`D-NNN`) with anti-forgery verification. This section documents the org chart, the governance protocols, and the session/dispatch lifecycle as they ship in this repo.
+The framework is not a single LLM loop — it is a self-governing research organization staffed by ~31 specialized LLM "agent" roles, coordinated by a `bash` runner that spawns one Director session at a time. Authority is split between two leads (PI + Director) under a unanimous-compromise protocol, work is gated through a 16-phase research pipeline (P0–P15), and every consequential act is recorded as a numbered decision (`D-NNN`) with anti-forgery verification. This section documents the org chart, the governance protocols, and the session/dispatch lifecycle as they ship in this repo.
 
 > **Note on agent memory in this repo.** Each role ships with its **`procedural.md`** (its operating procedure — all 31 present). The role's *accumulated* `semantic.md` knowledge and dated `episodic/` audit records are **research output produced during a deployment, so they are not included here** — a fresh fork starts those empty and grows them as it runs. The Director additionally ships `data/agents/director/{decisions.md,state.md}` scaffolding.
 
 ### 2.1 The role roster (`data/agents/`)
 
-The active roster is defined in `data/agents/agents.json` — 30 roles, each an object with a `description`, a default `model`, and a `prompt`. The roster is explicitly **tiered** by model capability (the tier scheme is codified in `data/agents/_shared/self_escalation_contract.md`):
+The active roster is defined in `data/agents/agents.json` — 31 roles, each an object with a `description`, a default `model`, and a `prompt`. The roster is explicitly **tiered** by model capability (the tier scheme is codified in `data/agents/_shared/self_escalation_contract.md`):
 
 - **Tier A — `claude-opus-4-8`** (judgment/taste): the two leads `pi` and `director`, the `unanimous_compromise_mediator`, scientific specialists (`chief_scientist`, `math_theorist`, `experimental_methodologist`, `hypothesis_generator`, `mechanism_extractor`, `measurement_theorist`, `kernel_specialist`), and the review/gate roles (`scientific_reviewer`, `statistical_reviewer`, `red_team`, `pre_reg_auditor`, `code_reviewer`, `paper_writer`, `lab_architect`, `grant_reviewer`, `evaluator`).
 - **Tier B — `claude-sonnet-4-6`** (substantive engineering/synthesis): `infrastructure_architect`, `implementation_engineer_c`, `tooling_engineer`, `reproducibility_engineer`, `profiler`, `memory_optimizer`, `literature_hunter`, `paper_digester`, `findings_curator`, `figure_generator`.
@@ -419,7 +419,7 @@ This framework's culture is anti-forgery and honest reporting; keep the numbers 
 - **Benchmark scores are at/near random** on tiny from-scratch models — frame as a *rigorous small-scale research process and a documented null result*, **never** as model capability. "Beating Opus" was formally proven unreachable at this scale and reported as such (reference deployment, Program 1; see `RESULTS.md`).
 - **"2 programs closed"** of 8 program directories (in the reference deployment) — the rest are methodology tracks, a retrospective, and brainstorm scaffolding. Say *"2 programs taken to formal closure."*
 - **The Metal GPU matmul path is built + unit-tested but dormant** (dispatch threshold disabled) — production training runs on Apple Accelerate (CPU/AMX), because the custom Metal kernel measured 3–100× *slower*. Say the GPU path is *"implemented and ready-to-enable,"* not "in production."
-- **30 agent roles** (active) + 18 retired; **64 Python tools**; **283 commits over ~7.1 weeks** (2026-04-13 → 2026-06-02).
+- **31 agent roles** (active) + 18 retired; **64 Python tools**; **283 commits over ~7.1 weeks** (2026-04-13 → 2026-06-02).
 - **This framework repo deliberately excludes research output** — `programs/`, `data/memories/`, `data/experiments.db`, `data/eval/`, `data/infra/`, `data/engineering/`, checkpoints, and per-role `semantic.md`/`episodic/` history. A fresh fork starts those empty and grows them as it runs. The corresponding artifacts and results are summarized in the sibling `RESULTS.md`.
 
 *To regenerate the framework's live self-assessment at any time: `make lab-report` (sources tied to research data report `"unavailable"` in a fresh fork — by design).*
