@@ -10,7 +10,7 @@
 - **Engine:** transformer training from scratch on Apple Silicon, Accelerate/CPU is the production path; a Metal GPU matmul path is built and tested but dormant.
 - **Agent org:** 31 specialized roles (PI, Director, statisticians, engineers, reviewers) wielding 64 tools under a tmux runner, with pre-registration discipline and anti-forgery sign-offs.
 - **Retrieval:** 4-layer hybrid-RAG (384-dim dense embeddings + BM25 + a token knowledge graph) with ~32 ms warm queries, fully local, zero cloud.
-- **Tests:** 777 Python test functions + 269 C (Unity) cases.
+- **Tests:** 768 Python test functions + 269 C (Unity) cases.
 
 **What's in this repo:** the full framework, native engine, 31-agent organization, 4-layer retrieval, build system, and test suite. See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the deep technical map.
 

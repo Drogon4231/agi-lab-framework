@@ -46,7 +46,7 @@ The engineering achievement the framework embodies is the **integrated system**:
 | Languages | **C17, Apple Metal, Swift, Python** (+ shell, Make) |
 | Native engine | **~19,600 LOC** — C 15,573 · headers 2,740 · Metal 1,047 · Swift 233 |
 | Python (tracked, non-test) | 18,991 LOC |
-| Tests | **828 Python test functions + 269 C (Unity) cases** |
+| Tests | **768 Python test functions + 269 C (Unity) cases** |
 | Autonomous agent roles | **31** (plus 18 retired, kept as templates/precedent) |
 | Tools | **64** Python tools |
 | Git history | **283 commits over ~7.1 weeks** (2026-04-13 → 2026-06-02) |
@@ -412,7 +412,7 @@ This framework's culture is anti-forgery and honest reporting; keep the numbers 
 
 - **Framework vs. deployment.** This repo is the *reusable framework*. Anything describing a *specific run's outcomes* (benchmark scores, $/session, program verdicts, corpus/index sizes, metadata coverage) is a property of a deployment, not of the framework binary, and is not shipped here.
 - **"~74K LOC" is raw `wc -l`** (includes blanks/comments) — say *"~74K lines,"* not "SLOC." Verified composition: native engine ~19,600 (C 15,573 · headers 2,740 · Metal 1,047 · Swift 233); Python tracked non-test 18,991.
-- **Tests: say "828 Python test functions + 269 C (Unity) cases,"** not "passing" — these are counts of test functions/cases as collected, not a clean end-to-end run claim.
+- **Tests: say "768 Python test functions + 269 C (Unity) cases,"** not "passing" — these are counts of test functions/cases as collected, not a clean end-to-end run claim.
 - **Benchmark scores are at/near random** on tiny from-scratch models — frame as a *rigorous small-scale research process and a documented null result*, **never** as model capability. "Beating Opus" is unreachable at this scale and is meant to be reported as such.
 - **The Metal GPU matmul path is built + unit-tested but dormant** (dispatch threshold disabled) — production training runs on Apple Accelerate (CPU/AMX), because the custom Metal kernel measured 3–100× *slower*. Say the GPU path is *"implemented and ready-to-enable,"* not "in production."
 - **31 agent roles** (active) + 18 retired; **64 Python tools**; **283 commits over ~7.1 weeks** (2026-04-13 → 2026-06-02).
