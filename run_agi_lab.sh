@@ -928,9 +928,17 @@ while true; do
                         echo "consolidator dispatch failed (non-fatal); will retry next iteration" \
                             >> data/infra/consolidator.log
                     # Update last_run timestamp + D-N count regardless of result
-                    # (idempotent — no harm in skipping next 6h if dispatch failed)
-                    local dn_count
-                    dn_count=$(grep -c '^D-' data/memories/log.md 2>/dev/null || echo 0)
+                    # (idempotent — no harm in skipping next 6h if dispatch failed).
+                    # No `local` here: this runs in a backgrounded { } group at the
+                    # top level of the while-loop (not a function), so `local`
+                    # errors under `set -e` and aborts the group before the write
+                    # below — which left consolidator.last_run unwritten, so the
+                    # throttle never advanced and the consolidator fired every
+                    # iteration. Count with the SAME expression that
+                    # _should_run_consolidator uses (see ~line 333) or trigger-3
+                    # (>=10 new D-N) mis-compares and re-fires every iteration.
+                    dn_count=$(grep -cE '^(### )?D-[0-9]' data/memories/log.md 2>/dev/null | head -1 | tr -cd '0-9')
+                    [ -n "$dn_count" ] || dn_count=0
                     echo "$(date +%s) $dn_count" > data/infra/consolidator.last_run
                 } &
             fi
@@ -1224,14 +1232,27 @@ while true; do
     # SIGNATURE_FORGERY_UNADDRESSED so Director must remediate (dispatch real agent, append
     # D-N REMEDIATION appendix to offending docs, update accountability_ledger.md).
     if [ "$EXIT_REASON" = "GRACEFUL_CHECKPOINT" ] && [ -x tools/verify_signatures.py ]; then
-        if ! source .venv/bin/activate && python3 tools/verify_signatures.py >> "$SESSION_LOG" 2>&1; then
-            echo "================================================" | tee -a "$SESSION_LOG"
-            echo "  BLOCKED: verify_signatures.py detected forged signatures." | tee -a "$SESSION_LOG"
-            echo "  Director must dispatch real agent(s), update accountability_ledger.md," | tee -a "$SESSION_LOG"
-            echo "  and remediate offending documents. Forcing immediate re-entry." | tee -a "$SESSION_LOG"
-            echo "================================================" | tee -a "$SESSION_LOG"
-            EXIT_REASON="SIGNATURE_FORGERY_UNADDRESSED"
-            osascript -e 'display notification "Forged signature detected. Director re-entering to remediate." with title "AGI Lab: Forgery Block"' 2>/dev/null || true
+        # Negate the WHOLE pipeline (activate AND verify), not just `source`.
+        # The old `! source ... && python3 ...` parsed as `(! source) && python3`,
+        # which was broken both ways: when the venv activated cleanly `! source`
+        # was false and the `&&` short-circuited, so verify_signatures.py NEVER
+        # ran (the forgery gate was silently dead); and a missing
+        # .venv/bin/activate made `source` fail fatally and abort the whole
+        # runner. Guard the venv first (a missing venv can never kill the runner),
+        # then run the real check in a subshell and negate its combined result.
+        if [ -f .venv/bin/activate ]; then
+            # shellcheck disable=SC1091
+            if ! ( source .venv/bin/activate && python3 tools/verify_signatures.py >> "$SESSION_LOG" 2>&1 ); then
+                echo "================================================" | tee -a "$SESSION_LOG"
+                echo "  BLOCKED: verify_signatures.py detected forged signatures." | tee -a "$SESSION_LOG"
+                echo "  Director must dispatch real agent(s), update accountability_ledger.md," | tee -a "$SESSION_LOG"
+                echo "  and remediate offending documents. Forcing immediate re-entry." | tee -a "$SESSION_LOG"
+                echo "================================================" | tee -a "$SESSION_LOG"
+                EXIT_REASON="SIGNATURE_FORGERY_UNADDRESSED"
+                osascript -e 'display notification "Forged signature detected. Director re-entering to remediate." with title "AGI Lab: Forgery Block"' 2>/dev/null || true
+            fi
+        else
+            echo "$(date '+%Y-%m-%d %H:%M:%S') [SIG-VERIFY] WARNING: .venv/bin/activate missing; skipping signature-forgery gate this session (cannot verify)." | tee -a "$SESSION_LOG"
         fi
     fi
 
